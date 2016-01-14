@@ -23,28 +23,43 @@ ids = df_test['id'].values
 n_train = df_train.shape[0]
 df_all = pd.concat([df_train, df_test], axis=0, ignore_index=True)
 
-def convert_dum(df, col, pre):
-	df_dum = pd.get_dummies(df[col], prefix=pre)
-	df = pd.concat([df, df_dum], axis=1)
-	df.drop(col, axis=1, inplace=True)
-	return df
+## feature engineering
+# df_all
+# we assume that location is numerical
+# it makes sense since given a specific class, the locations show the pattern
+# of a number of segments with consecutive numbers
+myfun = lambda x: int(x.strip('location '))
+df_all['location'] = df_all['location'].apply(myfun)
 
-# OHE
-df_all = convert_dum(df_all, 'location', 'loc')
+# df_eve
 df_eve = pd.pivot_table(df_eve, index='id', columns='event_type', aggfunc=len,
 	fill_value=0)
-df_log_feat = pd.pivot_table(df_log, values='volume', index='id', columns='log_feature', aggfunc=np.sum,
+
+# df_log
+df_log_table = pd.pivot_table(df_log, values='volume', index='id', columns='log_feature', aggfunc=np.sum,
 	fill_value=0)
-df_log_vol = pd.DataFrame(data={'log_vol': df_log_feat.sum(axis=1)})
-df_res = pd.pivot_table(df_res, index='id', columns='resource_type', aggfunc=len,
+df_log_vol_sum = pd.DataFrame(data={'log_vol_sum': df_log_table.sum(axis=1)})
+grouped = df_log[['id', 'log_feature']].groupby('id')
+myfun = lambda x: len(np.unique(x))
+df_log_feat_num = grouped.aggregate(myfun)
+
+# df_res
+df_res_table = pd.pivot_table(df_res, index='id', columns='resource_type', aggfunc=len,
 	fill_value=0)
+grouped = df_res[['id', 'resource_type']].groupby('id')
+myfun = lambda x: len(np.unique(x))
+df_res_num = grouped.aggregate(myfun)
+
 df_sev = pd.pivot_table(df_sev, index='id', columns='severity_type', aggfunc=len,
 	fill_value=0)
 
 # combine
 df_all = df_all.join(df_eve, on='id')
-df_all = df_all.join(df_log_feat, on='id')
-df_all = df_all.join(df_log_vol, on='id')
+df_all = df_all.join(df_log_table, on='id')
+df_all = df_all.join(df_log_vol_sum, on='id')
+df_all = df_all.join(df_log_feat_num, on='id')
+df_all = df_all.join(df_res_table, on='id')
+df_all = df_all.join(df_res_num, on='id')
 df_all = df_all.join(df_sev, on='id')
 
 # check NaN
@@ -76,6 +91,7 @@ xg_test = xgb.DMatrix(X_test)
 # k-fold
 k = 10
 y_pred_sum = np.zeros((X_test.shape[0], num_class))
+best_score = []
 kf = KFold(X.shape[0], n_folds=k, shuffle=True, random_state=0)
 i = 0
 for train, val in kf:
@@ -87,6 +103,7 @@ for train, val in kf:
   evallist  = [(xg_train,'train'), (xg_val,'eval')]
   # train
   bst = xgb.train(param, xg_train, num_round, evallist, early_stopping_rounds=30)
+  best_score += [bst.best_score]
   # predict
   xg_test = xgb.DMatrix(X_test)
   y_pred = bst.predict(xg_test, ntree_limit=bst.best_iteration)
@@ -94,6 +111,7 @@ for train, val in kf:
 
 # average
 y_pred = y_pred_sum/k
+print(np.mean(best_score))
 
 # save pred
 sub = pd.DataFrame(data={'id':ids, 'predict_0':y_pred[:, 0], 'predict_1':y_pred[:, 1],
