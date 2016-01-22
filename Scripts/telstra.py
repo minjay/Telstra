@@ -66,6 +66,14 @@ df_log_feat_min.rename(columns={'log_feature': 'log_feat_min'}, inplace=True)
 myfun = lambda x: np.std(x.apply(lambda x: x.strip('feature ')).astype(int))
 df_log_feat_std = grouped.aggregate(myfun)
 df_log_feat_std.rename(columns={'log_feature': 'log_feat_std'}, inplace=True)
+grouped = df_log[['id', 'volume']].groupby('id')
+myfun = lambda x: len(np.unique(x))
+df_log_vol_num = grouped.aggregate(myfun)
+df_log_vol_num.rename(columns={'volume': 'vol_num'}, inplace=True)
+# df_log_vol_max is controlled by sum and num
+myfun = lambda x: min(x)
+df_log_vol_min = grouped.aggregate(myfun)
+df_log_vol_min.rename(columns={'volume': 'vol_min'}, inplace=True)
 
 # df_res
 df_res_table = pd.pivot_table(df_res, index='id', columns='resource_type', aggfunc=len,
@@ -88,6 +96,8 @@ df_all_cb = df_all_cb.join(df_eve_min, on='id')
 df_all_cb = df_all_cb.join(df_eve_std, on='id')
 df_all_cb = df_all_cb.join(df_log_table, on='id')
 df_all_cb = df_all_cb.join(df_log_vol_sum, on='id')
+df_all_cb = df_all_cb.join(df_log_vol_num, on='id')
+df_all_cb = df_all_cb.join(df_log_vol_min, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_num, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_max, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_min, on='id')
