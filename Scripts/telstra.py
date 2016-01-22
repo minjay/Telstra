@@ -143,7 +143,6 @@ for train, val in kf:
   bst = xgb.train(param, xg_train, num_round, evallist, early_stopping_rounds=100)
   best_score += [bst.best_score]
   # predict
-  xg_test = xgb.DMatrix(X_test)
   y_pred = bst.predict(xg_test, ntree_limit=bst.best_iteration)
   y_pred_sum = y_pred_sum+y_pred
 
