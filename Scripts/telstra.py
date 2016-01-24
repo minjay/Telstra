@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from scipy.stats import mode
 import pandas as pd
 import xgboost as xgb
 from sklearn.cross_validation import train_test_split
@@ -23,14 +24,16 @@ n_train = df_train.shape[0]
 df_all = pd.concat([df_train, df_test], axis=0, ignore_index=True)
 
 ## feature engineering
+# df_loc
+# contain information
+loc_diff = np.setdiff1d(df_test['location'].values, df_train['location'].values)
+df_loc_table = pd.pivot_table(df_all, index='id', columns='location', aggfunc=len,
+  fill_value=0)
+df_loc_table.drop(loc_diff, axis=1, inplace=True)
+
 # df_all
 myfun = lambda x: int(x.strip('location '))
 df_all['location'] = df_all['location'].apply(myfun)
-
-# df_loc
-# contain information
-df_loc_table = pd.pivot_table(df_all, index='id', columns='location', aggfunc=len,
-	fill_value=0)
 
 # df_eve
 df_eve_table = pd.pivot_table(df_eve, index='id', columns='event_type', aggfunc=len,
@@ -82,6 +85,9 @@ grouped = df_res[['id', 'resource_type']].groupby('id')
 myfun = lambda x: len(np.unique(x))
 df_res_num = grouped.aggregate(myfun)
 df_res_num.rename(columns={'resource_type': 'res_num'}, inplace=True)
+myfun = lambda x: np.std(x.apply(lambda x: x.strip('resource_type ')).astype(int))
+df_res_std = grouped.aggregate(myfun)
+df_res_std.rename(columns={'resource_type': 'res_std'}, inplace=True)
 
 # df_sev
 # It is categorical. It does not have an ordering.
@@ -104,6 +110,7 @@ df_all_cb = df_all_cb.join(df_log_feat_min, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_std, on='id')
 df_all_cb = df_all_cb.join(df_res_table, on='id')
 df_all_cb = df_all_cb.join(df_res_num, on='id')
+df_all_cb = df_all_cb.join(df_res_std, on='id')
 df_all_cb = df_all_cb.join(df_sev_table, on='id')
 
 # check NaN
