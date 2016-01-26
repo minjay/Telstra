@@ -31,6 +31,11 @@ df_loc_table = pd.pivot_table(df_all, index='id', columns='location', aggfunc=le
   fill_value=0)
 df_loc_table.drop(loc_diff, axis=1, inplace=True)
 
+loc_freq = df_all['location'].value_counts()
+loc_freq = pd.DataFrame({'loc_freq': loc_freq})
+loc_freq.index.name = 'location'
+df_all = df_all.join(loc_freq, on='location')
+
 # df_all
 myfun = lambda x: int(x.strip('location '))
 df_all['location'] = df_all['location'].apply(myfun)
