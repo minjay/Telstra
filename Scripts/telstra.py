@@ -112,8 +112,16 @@ df_res_std.rename(columns={'resource_type': 'res_std'}, inplace=True)
 df_sev_table = pd.pivot_table(df_sev, index='id', columns='severity_type', aggfunc=len,
 	fill_value=0)
 
+# interaction
+df_log_loc = df_log.merge(df_all[['id', 'location']], on='id')
+grouped = df_log_loc[['volume', 'location']].groupby('location')
+myfun = lambda x: np.sum(x)
+df_loc_log_vol_sum = grouped.aggregate(myfun)
+df_loc_log_vol_sum.rename(columns={'volume': 'loc_log_vol_sum'}, inplace=True)
+
 # combine
-df_all_cb = df_all.join(df_loc_table, on='id')
+df_all_cb = df_all.join(df_loc_log_vol_sum, on='location')
+df_all_cb = df_all_cb.join(df_loc_table, on='id')
 df_all_cb = df_all_cb.join(df_eve_table, on='id')
 df_all_cb = df_all_cb.join(df_eve_max, on='id')
 df_all_cb = df_all_cb.join(df_eve_min, on='id')
