@@ -119,8 +119,14 @@ myfun = lambda x: np.sum(x)
 df_loc_log_vol_sum = grouped.aggregate(myfun)
 df_loc_log_vol_sum.rename(columns={'volume': 'loc_log_vol_sum'}, inplace=True)
 
+grouped = df_log_loc[['log_feature', 'location']].groupby('location')
+myfun = lambda x: len(np.unique(x))
+df_loc_log_feat_num = grouped.aggregate(myfun)
+df_loc_log_feat_num.rename(columns={'log_feature': 'loc_log_feat_num'}, inplace=True)
+
 # combine
 df_all_cb = df_all.join(df_loc_log_vol_sum, on='location')
+df_all_cb = df_all_cb.join(df_loc_log_feat_num, on='location')
 df_all_cb = df_all_cb.join(df_loc_table, on='id')
 df_all_cb = df_all_cb.join(df_eve_table, on='id')
 df_all_cb = df_all_cb.join(df_eve_max, on='id')
