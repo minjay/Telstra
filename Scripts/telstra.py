@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from scipy.stats import mode
+from scipy.stats import mode, skew, kurtosis, entropy
 import pandas as pd
 import xgboost as xgb
 from sklearn.cross_validation import train_test_split
@@ -74,6 +74,9 @@ df_log_feat_min.rename(columns={'log_feature': 'log_feat_min'}, inplace=True)
 myfun = lambda x: np.std(x.apply(lambda x: x.strip('feature ')).astype(int))
 df_log_feat_std = grouped.aggregate(myfun)
 df_log_feat_std.rename(columns={'log_feature': 'log_feat_std'}, inplace=True)
+myfun = lambda x: skew(x.apply(lambda x: x.strip('feature ')).astype(int))
+df_log_feat_skew = grouped.aggregate(myfun)
+df_log_feat_skew.rename(columns={'log_feature': 'log_feat_skew'}, inplace=True)
 grouped = df_log[['id', 'volume']].groupby('id')
 myfun = lambda x: len(np.unique(x))
 df_log_vol_num = grouped.aggregate(myfun)
@@ -140,6 +143,7 @@ df_all_cb = df_all_cb.join(df_log_feat_num, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_max, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_min, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_std, on='id')
+df_all_cb = df_all_cb.join(df_log_feat_skew, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_freq_max, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_freq_min, on='id')
 df_all_cb = df_all_cb.join(df_res_table, on='id')
