@@ -5,6 +5,8 @@ import pandas as pd
 import xgboost as xgb
 from sklearn.cross_validation import train_test_split
 from sklearn.cross_validation import KFold
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 
 # load data
 my_dir = os.getcwd()
@@ -130,7 +132,6 @@ df_loc_log_feat_num.rename(columns={'log_feature': 'loc_log_feat_num'}, inplace=
 # combine
 df_all_cb = df_all.join(df_loc_log_vol_sum, on='location')
 df_all_cb = df_all_cb.join(df_loc_log_feat_num, on='location')
-df_all_cb = df_all_cb.join(df_loc_table, on='id')
 df_all_cb = df_all_cb.join(df_eve_table, on='id')
 df_all_cb = df_all_cb.join(df_eve_max, on='id')
 df_all_cb = df_all_cb.join(df_eve_min, on='id')
@@ -150,6 +151,8 @@ df_all_cb = df_all_cb.join(df_res_table, on='id')
 df_all_cb = df_all_cb.join(df_res_num, on='id')
 df_all_cb = df_all_cb.join(df_res_std, on='id')
 df_all_cb = df_all_cb.join(df_sev_table, on='id')
+n_feat = df_all_cb.shape[1]-1
+df_all_cb = df_all_cb.join(df_loc_table, on='id')
 
 # check NaN
 df_all_cb.isnull().any().any()
@@ -158,7 +161,8 @@ df_all_cb.isnull().any().any()
 df_all_no_id = df_all_cb.drop('id', axis=1, inplace=False)
 
 X_all = df_all_no_id.values
-X = X_all[:n_train, :]
+X = X_all[:n_train, :n_feat]
+X_cat = X_all[:n_train, :]
 
 ## specify parameters for xgb
 param = {}
@@ -176,8 +180,8 @@ param['max_depth'] = 8
 
 num_round = 10000
 
-X_test = X_all[n_train:, :]
-xg_test = xgb.DMatrix(X_test)
+X_test = X_all[n_train:, :n_feat]
+X_cat_test = X_all[n_train:, :]
 
 # set random seed
 np.random.seed(0)
@@ -192,12 +196,22 @@ for train, val in kf:
   i += 1
   print(i)
   X_train, X_val, y_train, y_val = X[train], X[val], y[train], y[val]
+  LR = LogisticRegression(solver='lbfgs', multi_class='multinomial')
+  X_cat_train, X_cat_val = X_cat[train], X_cat[val]
+  LR_fit = LR.fit(X_cat_train, y_train)
+  y_pred_train = np.reshape(LR_fit.predict(X_cat_train), (X_train.shape[0], 1))
+  y_pred_val = np.reshape(LR_fit.predict(X_cat_val), (X_val.shape[0], 1))
+  X_train = np.concatenate((X_train, y_pred_train), axis=1)
+  X_val = np.concatenate((X_val, y_pred_val), axis=1)
   xg_train = xgb.DMatrix(X_train, y_train)
   xg_val = xgb.DMatrix(X_val, y_val)
   evallist  = [(xg_train,'train'), (xg_val,'eval')]
   # train
   bst = xgb.train(param, xg_train, num_round, evallist, early_stopping_rounds=100)
   best_score += [bst.best_score]
+  y_pred_test = np.reshape(LR_fit.predict(X_cat_test), (X_test.shape[0], 1))
+  X_test = np.concatenate((X_test, y_pred_test), axis=1)
+  xg_test = xgb.DMatrix(X_test)
   # predict
   y_pred = bst.predict(xg_test, ntree_limit=bst.best_iteration)
   y_pred_sum = y_pred_sum+y_pred
