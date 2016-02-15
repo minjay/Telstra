@@ -132,11 +132,9 @@ df_loc_log_feat_num.rename(columns={'log_feature': 'loc_log_feat_num'}, inplace=
 # combine
 df_all_cb = df_all.join(df_loc_log_vol_sum, on='location')
 df_all_cb = df_all_cb.join(df_loc_log_feat_num, on='location')
-df_all_cb = df_all_cb.join(df_eve_table, on='id')
 df_all_cb = df_all_cb.join(df_eve_max, on='id')
 df_all_cb = df_all_cb.join(df_eve_min, on='id')
 df_all_cb = df_all_cb.join(df_eve_std, on='id')
-df_all_cb = df_all_cb.join(df_log_table, on='id')
 df_all_cb = df_all_cb.join(df_log_vol_sum, on='id')
 df_all_cb = df_all_cb.join(df_log_vol_num, on='id')
 df_all_cb = df_all_cb.join(df_log_vol_min, on='id')
@@ -147,9 +145,11 @@ df_all_cb = df_all_cb.join(df_log_feat_std, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_skew, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_freq_max, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_freq_min, on='id')
-df_all_cb = df_all_cb.join(df_res_table, on='id')
 df_all_cb = df_all_cb.join(df_res_num, on='id')
 df_all_cb = df_all_cb.join(df_res_std, on='id')
+df_all_cb = df_all_cb.join(df_eve_table, on='id')
+df_all_cb = df_all_cb.join(df_log_table, on='id')
+df_all_cb = df_all_cb.join(df_res_table, on='id')
 df_all_cb = df_all_cb.join(df_sev_table, on='id')
 n_feat = df_all_cb.shape[1]-1
 df_all_cb = df_all_cb.join(df_loc_table, on='id')
@@ -183,6 +183,12 @@ num_round = 10000
 X_test = X_all[n_train:, :n_feat]
 X_cat_test = X_all[n_train:, :]
 
+LR = LogisticRegression(solver='lbfgs', multi_class='multinomial')
+LR_fit = LR.fit(X_cat, y)
+y_pred_test = np.reshape(LR_fit.predict(X_cat_test), (X_test.shape[0], 1))
+X_test = np.concatenate((X_test, y_pred_test), axis=1)
+xg_test = xgb.DMatrix(X_test)
+
 # set random seed
 np.random.seed(0)
 
@@ -196,7 +202,6 @@ for train, val in kf:
   i += 1
   print(i)
   X_train, X_val, y_train, y_val = X[train], X[val], y[train], y[val]
-  LR = LogisticRegression(solver='lbfgs', multi_class='multinomial')
   X_cat_train, X_cat_val = X_cat[train], X_cat[val]
   LR_fit = LR.fit(X_cat_train, y_train)
   y_pred_train = np.reshape(LR_fit.predict(X_cat_train), (X_train.shape[0], 1))
@@ -209,9 +214,6 @@ for train, val in kf:
   # train
   bst = xgb.train(param, xg_train, num_round, evallist, early_stopping_rounds=100)
   best_score += [bst.best_score]
-  y_pred_test = np.reshape(LR_fit.predict(X_cat_test), (X_test.shape[0], 1))
-  X_test = np.concatenate((X_test, y_pred_test), axis=1)
-  xg_test = xgb.DMatrix(X_test)
   # predict
   y_pred = bst.predict(xg_test, ntree_limit=bst.best_iteration)
   y_pred_sum = y_pred_sum+y_pred
