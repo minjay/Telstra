@@ -7,6 +7,8 @@ from sklearn.cross_validation import train_test_split
 from sklearn.cross_validation import KFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.calibration import CalibratedClassifierCV
 
 # load data
 my_dir = os.getcwd()
@@ -79,6 +81,7 @@ df_log_feat_std.rename(columns={'log_feature': 'log_feat_std'}, inplace=True)
 myfun = lambda x: skew(x.apply(lambda x: x.strip('feature ')).astype(int))
 df_log_feat_skew = grouped.aggregate(myfun)
 df_log_feat_skew.rename(columns={'log_feature': 'log_feat_skew'}, inplace=True)
+
 grouped = df_log[['id', 'volume']].groupby('id')
 myfun = lambda x: len(np.unique(x))
 df_log_vol_num = grouped.aggregate(myfun)
@@ -129,6 +132,10 @@ myfun = lambda x: len(np.unique(x))
 df_loc_log_feat_num = grouped.aggregate(myfun)
 df_loc_log_feat_num.rename(columns={'log_feature': 'loc_log_feat_num'}, inplace=True)
 
+df_loc_lfm = df_all[['id', 'location']].join(df_log_feat_max, on='id')
+df_loc_lfm_freq = pd.DataFrame(data={'loc_lfm_freq': df_loc_lfm.groupby(['location', 'log_feat_max']).size()})
+df_loc_lfm_freq = df_loc_lfm.join(df_loc_lfm_freq, on=['location', 'log_feat_max'])[['id', 'loc_lfm_freq']]
+
 # combine
 df_all_cb = df_all.join(df_loc_log_vol_sum, on='location')
 df_all_cb = df_all_cb.join(df_loc_log_feat_num, on='location')
@@ -147,6 +154,7 @@ df_all_cb = df_all_cb.join(df_log_feat_freq_max, on='id')
 df_all_cb = df_all_cb.join(df_log_feat_freq_min, on='id')
 df_all_cb = df_all_cb.join(df_res_num, on='id')
 df_all_cb = df_all_cb.join(df_res_std, on='id')
+df_all_cb = df_all_cb.merge(df_loc_lfm_freq, on='id')
 df_all_cb = df_all_cb.join(df_eve_table, on='id')
 df_all_cb = df_all_cb.join(df_log_table, on='id')
 df_all_cb = df_all_cb.join(df_res_table, on='id')
@@ -183,14 +191,14 @@ num_round = 10000
 X_test = X_all[n_train:, :n_feat]
 X_cat_test = X_all[n_train:, :]
 
-LR = LogisticRegression(solver='lbfgs', multi_class='multinomial')
-LR_fit = LR.fit(X_cat, y)
-y_pred_test = np.reshape(LR_fit.predict(X_cat_test), (X_test.shape[0], 1))
-X_test = np.concatenate((X_test, y_pred_test), axis=1)
-xg_test = xgb.DMatrix(X_test)
-
 # set random seed
 np.random.seed(0)
+
+LR = LogisticRegression(solver='lbfgs', multi_class='multinomial')
+LR_fit = LR.fit(X_cat, y)
+y_pred_test_LR = np.reshape(LR_fit.predict(X_cat_test), (X_test.shape[0], 1))
+X_test = np.concatenate((X_test, y_pred_test_LR), axis=1)
+xg_test = xgb.DMatrix(X_test)
 
 # k-fold
 k = 5
@@ -204,10 +212,10 @@ for train, val in kf:
   X_train, X_val, y_train, y_val = X[train], X[val], y[train], y[val]
   X_cat_train, X_cat_val = X_cat[train], X_cat[val]
   LR_fit = LR.fit(X_cat_train, y_train)
-  y_pred_train = np.reshape(LR_fit.predict(X_cat_train), (X_train.shape[0], 1))
-  y_pred_val = np.reshape(LR_fit.predict(X_cat_val), (X_val.shape[0], 1))
-  X_train = np.concatenate((X_train, y_pred_train), axis=1)
-  X_val = np.concatenate((X_val, y_pred_val), axis=1)
+  y_pred_train_LR = np.reshape(LR_fit.predict(X_cat_train), (X_train.shape[0], 1))
+  y_pred_val_LR = np.reshape(LR_fit.predict(X_cat_val), (X_val.shape[0], 1))
+  X_train = np.concatenate((X_train, y_pred_train_LR), axis=1)
+  X_val = np.concatenate((X_val, y_pred_val_LR), axis=1)
   xg_train = xgb.DMatrix(X_train, y_train)
   xg_val = xgb.DMatrix(X_val, y_val)
   evallist  = [(xg_train,'train'), (xg_val,'eval')]
