@@ -131,6 +131,9 @@ grouped = df_log_loc[['log_feature', 'location']].groupby('location')
 myfun = lambda x: len(np.unique(x))
 df_loc_log_feat_num = grouped.aggregate(myfun)
 df_loc_log_feat_num.rename(columns={'log_feature': 'loc_log_feat_num'}, inplace=True)
+myfun = lambda x: max(x.apply(lambda x: x.strip('feature ')).astype(int))
+df_loc_log_feat_max = grouped.aggregate(myfun)
+df_loc_log_feat_max.rename(columns={'log_feature': 'loc_log_feat_max'}, inplace=True)
 
 df_loc_lfm = df_all[['id', 'location']].join(df_log_feat_max, on='id')
 df_loc_lfm_freq = pd.DataFrame(data={'loc_lfm_freq': df_loc_lfm.groupby(['location', 'log_feat_max']).size()})
@@ -139,6 +142,7 @@ df_loc_lfm_freq = df_loc_lfm.join(df_loc_lfm_freq, on=['location', 'log_feat_max
 # combine
 df_all_cb = df_all.join(df_loc_log_vol_sum, on='location')
 df_all_cb = df_all_cb.join(df_loc_log_feat_num, on='location')
+df_all_cb = df_all_cb.join(df_loc_log_feat_max, on='location')
 df_all_cb = df_all_cb.join(df_eve_max, on='id')
 df_all_cb = df_all_cb.join(df_eve_min, on='id')
 df_all_cb = df_all_cb.join(df_eve_std, on='id')
