@@ -27,6 +27,22 @@ ids = df_test['id'].values
 n_train = df_train.shape[0]
 df_all = pd.concat([df_train, df_test], axis=0, ignore_index=True)
 
+## data leakage?
+df_sev_all = df_sev.merge(df_all, on='id')
+loc = 'location 1'
+time = []
+t = 0
+for i in range(df_sev_all.shape[0]):
+  if df_sev_all['location'][i]==loc:
+    t += 1
+    time += [t]
+  else:
+    loc = df_sev_all['location'][i]
+    t = 1
+    time += [t]
+
+df_time = pd.DataFrame({'id': df_sev['id'], 'time': time})
+
 ## feature engineering
 # df_loc
 # contain information
@@ -159,6 +175,7 @@ df_all_cb = df_all_cb.join(df_log_feat_freq_min, on='id')
 df_all_cb = df_all_cb.join(df_res_num, on='id')
 df_all_cb = df_all_cb.join(df_res_std, on='id')
 df_all_cb = df_all_cb.merge(df_loc_lfm_freq, on='id')
+df_all_cb = df_all_cb.merge(df_time, on='id')
 df_all_cb = df_all_cb.join(df_eve_table, on='id')
 df_all_cb = df_all_cb.join(df_log_table, on='id')
 df_all_cb = df_all_cb.join(df_res_table, on='id')
@@ -182,7 +199,7 @@ param = {}
 param['objective'] = 'multi:softprob'
 param['eval_metric'] = 'mlogloss'
 param['num_class'] = num_class
-param['nthread'] = 1
+param['nthread'] = 10
 param['silent'] = 1
 
 param['eta'] = 0.02
@@ -204,34 +221,36 @@ y_pred_test_LR = np.reshape(LR_fit.predict(X_cat_test), (X_test.shape[0], 1))
 X_test = np.concatenate((X_test, y_pred_test_LR), axis=1)
 xg_test = xgb.DMatrix(X_test)
 
-# k-fold
-k = 5
-y_pred_sum = np.zeros((X_test.shape[0], num_class))
 best_score = []
-kf = KFold(X.shape[0], n_folds=k, shuffle=True)
-i = 0
-for train, val in kf:
-  i += 1
-  print(i)
-  X_train, X_val, y_train, y_val = X[train], X[val], y[train], y[val]
-  X_cat_train, X_cat_val = X_cat[train], X_cat[val]
-  LR_fit = LR.fit(X_cat_train, y_train)
-  y_pred_train_LR = np.reshape(LR_fit.predict(X_cat_train), (X_train.shape[0], 1))
-  y_pred_val_LR = np.reshape(LR_fit.predict(X_cat_val), (X_val.shape[0], 1))
-  X_train = np.concatenate((X_train, y_pred_train_LR), axis=1)
-  X_val = np.concatenate((X_val, y_pred_val_LR), axis=1)
-  xg_train = xgb.DMatrix(X_train, y_train)
-  xg_val = xgb.DMatrix(X_val, y_val)
-  evallist  = [(xg_train,'train'), (xg_val,'eval')]
-  # train
-  bst = xgb.train(param, xg_train, num_round, evallist, early_stopping_rounds=100)
-  best_score += [bst.best_score]
-  # predict
-  y_pred = bst.predict(xg_test, ntree_limit=bst.best_iteration)
-  y_pred_sum = y_pred_sum+y_pred
+y_pred_sum = np.zeros((X_test.shape[0], num_class))
+# k-fold
+R = 20
+for r in range(R):
+  k = 5
+  kf = KFold(X.shape[0], n_folds=k, shuffle=True)
+  i = 0
+  for train, val in kf:
+    i += 1
+    print(i)
+    X_train, X_val, y_train, y_val = X[train], X[val], y[train], y[val]
+    X_cat_train, X_cat_val = X_cat[train], X_cat[val]
+    LR_fit = LR.fit(X_cat_train, y_train)
+    y_pred_train_LR = np.reshape(LR_fit.predict(X_cat_train), (X_train.shape[0], 1))
+    y_pred_val_LR = np.reshape(LR_fit.predict(X_cat_val), (X_val.shape[0], 1))
+    X_train = np.concatenate((X_train, y_pred_train_LR), axis=1)
+    X_val = np.concatenate((X_val, y_pred_val_LR), axis=1)
+    xg_train = xgb.DMatrix(X_train, y_train)
+    xg_val = xgb.DMatrix(X_val, y_val)
+    evallist  = [(xg_train,'train'), (xg_val,'eval')]
+    # train
+    bst = xgb.train(param, xg_train, num_round, evallist, early_stopping_rounds=100)
+    best_score += [bst.best_score]
+    # predict
+    y_pred = bst.predict(xg_test, ntree_limit=bst.best_iteration)
+    y_pred_sum = y_pred_sum+y_pred
 
 # average
-y_pred = y_pred_sum/k
+y_pred = y_pred_sum/(k*R)
 print(np.mean(best_score))
 
 # save pred
