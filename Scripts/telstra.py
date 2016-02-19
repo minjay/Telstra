@@ -231,7 +231,7 @@ xg_test = xgb.DMatrix(X_test)
 best_score = []
 y_pred_sum = np.zeros((X_test.shape[0], num_class))
 # k-fold
-R = 1
+R = 100
 for r in range(R):
   k = 5
   kf = KFold(X.shape[0], n_folds=k, shuffle=True)
