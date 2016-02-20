@@ -173,6 +173,10 @@ df_loc_lfm = df_all[['id', 'location']].join(df_log_feat_max, on='id')
 df_loc_lfm_freq = pd.DataFrame(data={'loc_lfm_freq': df_loc_lfm.groupby(['location', 'log_feat_max']).size()})
 df_loc_lfm_freq = df_loc_lfm.join(df_loc_lfm_freq, on=['location', 'log_feat_max'])[['id', 'loc_lfm_freq']]
 
+df_loc_lfn = df_all[['id', 'location']].join(df_log_feat_num, on='id')
+df_loc_lfn_freq = pd.DataFrame(data={'loc_lfn_freq': df_loc_lfn.groupby(['location', 'log_feat_num']).size()})
+df_loc_lfn_freq = df_loc_lfn.join(df_loc_lfn_freq, on=['location', 'log_feat_num'])[['id', 'loc_lfn_freq']]
+
 # combine
 df_all_cb = df_all.join(df_loc_log_vol_sum, on='location')
 df_all_cb = df_all_cb.join(df_loc_log_feat_num, on='location')
