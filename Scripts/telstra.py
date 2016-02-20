@@ -157,6 +157,18 @@ myfun = lambda x: max(x.apply(lambda x: x.strip('event_type ')).astype(int))
 df_loc_eve_max = grouped.aggregate(myfun)
 df_loc_eve_max.rename(columns={'event_type': 'loc_eve_max'}, inplace=True)
 
+df_res_loc = df_res.merge(df_all[['id', 'location']], on='id')
+grouped = df_res_loc[['resource_type', 'location']].groupby('location')
+myfun = lambda x: len(np.unique(x))
+df_loc_res_num = grouped.aggregate(myfun)
+df_loc_res_num.rename(columns={'resource_type': 'loc_res_num'}, inplace=True)
+
+df_lfn_loc = df_all[['id', 'location']].join(df_log_feat_num, on='id')
+grouped = df_lfn_loc[['location', 'log_feat_num']].groupby('location')
+myfun = lambda x: len(np.unique(x))
+df_loc_lfn_num = grouped.aggregate(myfun)
+df_loc_lfn_num.rename(columns={'log_feat_num': 'loc_lfn_num'}, inplace=True)
+
 df_loc_lfm = df_all[['id', 'location']].join(df_log_feat_max, on='id')
 df_loc_lfm_freq = pd.DataFrame(data={'loc_lfm_freq': df_loc_lfm.groupby(['location', 'log_feat_max']).size()})
 df_loc_lfm_freq = df_loc_lfm.join(df_loc_lfm_freq, on=['location', 'log_feat_max'])[['id', 'loc_lfm_freq']]
@@ -166,6 +178,8 @@ df_all_cb = df_all.join(df_loc_log_vol_sum, on='location')
 df_all_cb = df_all_cb.join(df_loc_log_feat_num, on='location')
 df_all_cb = df_all_cb.join(df_loc_log_feat_max, on='location')
 df_all_cb = df_all_cb.join(df_loc_eve_max, on='location')
+df_all_cb = df_all_cb.join(df_loc_res_num, on='location')
+df_all_cb = df_all_cb.join(df_loc_lfn_num, on='location')
 df_all_cb = df_all_cb.join(df_eve_max, on='id')
 df_all_cb = df_all_cb.join(df_eve_min, on='id')
 df_all_cb = df_all_cb.join(df_eve_std, on='id')
@@ -182,6 +196,7 @@ df_all_cb = df_all_cb.join(df_log_feat_freq_min, on='id')
 df_all_cb = df_all_cb.join(df_res_num, on='id')
 df_all_cb = df_all_cb.join(df_res_std, on='id')
 df_all_cb = df_all_cb.merge(df_loc_lfm_freq, on='id')
+df_all_cb = df_all_cb.merge(df_loc_lfn_freq, on='id')
 df_all_cb = df_all_cb.merge(df_time, on='id')
 df_all_cb = df_all_cb.join(df_eve_table, on='id')
 df_all_cb = df_all_cb.join(df_log_table, on='id')
@@ -231,7 +246,7 @@ xg_test = xgb.DMatrix(X_test)
 best_score = []
 y_pred_sum = np.zeros((X_test.shape[0], num_class))
 # k-fold
-R = 100
+R = 1
 for r in range(R):
   k = 5
   kf = KFold(X.shape[0], n_folds=k, shuffle=True)
