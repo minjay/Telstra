@@ -10,64 +10,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
 
-# load data
+import sys
 my_dir = os.getcwd()
-df_train = pd.read_csv(my_dir+'/Telstra/Data/train.csv')
-df_test = pd.read_csv(my_dir+'/Telstra/Data/test.csv')
-df_eve = pd.read_csv(my_dir+'/Telstra/Data/event_type.csv')
-df_log = pd.read_csv(my_dir+'/Telstra/Data/log_feature.csv')
-df_res = pd.read_csv(my_dir+'/Telstra/Data/resource_type.csv')
-df_sev = pd.read_csv(my_dir+'/Telstra/Data/severity_type.csv')
+sys.path.append(my_dir+'/Telstra/Scripts')
 
-y = df_train['fault_severity'].values
-num_class = max(y)+1
-df_train.drop('fault_severity', axis=1, inplace=True)
-ids = df_test['id'].values
+from feat_eng import *
 
-n_train = df_train.shape[0]
-df_all = pd.concat([df_train, df_test], axis=0, ignore_index=True)
+(X_all, y, num_class, n_train, n_feat) = feat_eng()
 
-
-# combine
-df_all_cb = df_all.join(df_loc_log_vol_sum, on='location')
-df_all_cb = df_all_cb.join(df_loc_log_feat_num, on='location')
-df_all_cb = df_all_cb.join(df_loc_log_feat_max, on='location')
-df_all_cb = df_all_cb.join(df_loc_eve_max, on='location')
-df_all_cb = df_all_cb.join(df_loc_res_num, on='location')
-df_all_cb = df_all_cb.join(df_loc_lfn_num, on='location')
-df_all_cb = df_all_cb.join(df_eve_max, on='id')
-df_all_cb = df_all_cb.join(df_eve_min, on='id')
-df_all_cb = df_all_cb.join(df_eve_std, on='id')
-df_all_cb = df_all_cb.join(df_eve_skew, on='id')
-df_all_cb = df_all_cb.join(df_log_vol_sum, on='id')
-df_all_cb = df_all_cb.join(df_log_vol_num, on='id')
-df_all_cb = df_all_cb.join(df_log_vol_min, on='id')
-df_all_cb = df_all_cb.join(df_log_feat_num, on='id')
-df_all_cb = df_all_cb.join(df_log_feat_max, on='id')
-df_all_cb = df_all_cb.join(df_log_feat_min, on='id')
-df_all_cb = df_all_cb.join(df_log_feat_std, on='id')
-df_all_cb = df_all_cb.join(df_log_feat_skew, on='id')
-df_all_cb = df_all_cb.join(df_log_feat_freq_max, on='id')
-df_all_cb = df_all_cb.join(df_log_feat_freq_min, on='id')
-df_all_cb = df_all_cb.join(df_res_num, on='id')
-df_all_cb = df_all_cb.join(df_res_std, on='id')
-df_all_cb = df_all_cb.merge(df_loc_lfm_freq, on='id')
-df_all_cb = df_all_cb.merge(df_loc_lfn_freq, on='id')
-df_all_cb = df_all_cb.merge(df_time, on='id')
-df_all_cb = df_all_cb.join(df_eve_table, on='id')
-df_all_cb = df_all_cb.join(df_log_table, on='id')
-df_all_cb = df_all_cb.join(df_res_table, on='id')
-df_all_cb = df_all_cb.join(df_sev_table, on='id')
-n_feat = df_all_cb.shape[1]-1
-df_all_cb = df_all_cb.join(df_loc_table, on='id')
-
-# check NaN
-df_all_cb.isnull().any().any()
-
-# drop id
-df_all_no_id = df_all_cb.drop('id', axis=1, inplace=False)
-
-X_all = df_all_no_id.values
 X = X_all[:n_train, :n_feat]
 X_cat = X_all[:n_train, :]
 
