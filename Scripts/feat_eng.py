@@ -205,11 +205,11 @@ def feat_eng():
 	df_all_cb = df_all_cb.merge(df_loc_lfm_freq, on='id')
 	df_all_cb = df_all_cb.merge(df_loc_lfn_freq, on='id')
 	df_all_cb = df_all_cb.merge(df_time, on='id')
+	n_feat = df_all_cb.shape[1]-1
 	df_all_cb = df_all_cb.join(df_eve_table, on='id')
 	df_all_cb = df_all_cb.join(df_log_table, on='id')
 	df_all_cb = df_all_cb.join(df_res_table, on='id')
 	df_all_cb = df_all_cb.join(df_sev_table, on='id')
-	n_feat = df_all_cb.shape[1]-1
 	df_all_cb = df_all_cb.join(df_loc_table, on='id')
 	# check NaN
 	df_all_cb.isnull().any().any()
