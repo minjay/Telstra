@@ -76,6 +76,9 @@ df_eve_min.rename(columns={'event_type': 'eve_min'}, inplace=True)
 myfun = lambda x: np.std(x.apply(lambda x: x.strip('event_type ')).astype(int)) 
 df_eve_std = grouped.aggregate(myfun)
 df_eve_std.rename(columns={'event_type': 'eve_std'}, inplace=True)
+myfun = lambda x: skew(x.apply(lambda x: x.strip('event_type ')).astype(int)) 
+df_eve_skew = grouped.aggregate(myfun)
+df_eve_skew.rename(columns={'event_type': 'eve_skew'}, inplace=True)
 
 ## df_log
 df_log_table = pd.pivot_table(df_log, values='volume', index='id', columns='log_feature', aggfunc=np.sum,
@@ -187,6 +190,7 @@ df_all_cb = df_all_cb.join(df_loc_lfn_num, on='location')
 df_all_cb = df_all_cb.join(df_eve_max, on='id')
 df_all_cb = df_all_cb.join(df_eve_min, on='id')
 df_all_cb = df_all_cb.join(df_eve_std, on='id')
+df_all_cb = df_all_cb.join(df_eve_skew, on='id')
 df_all_cb = df_all_cb.join(df_log_vol_sum, on='id')
 df_all_cb = df_all_cb.join(df_log_vol_num, on='id')
 df_all_cb = df_all_cb.join(df_log_vol_min, on='id')
@@ -229,7 +233,7 @@ param['nthread'] = 10
 param['silent'] = 1
 
 param['eta'] = 0.02
-param['colsample_bytree'] = 0.3
+param['colsample_bytree'] = 0.5
 param['subsample'] = 0.9
 param['max_depth'] = 8
 
