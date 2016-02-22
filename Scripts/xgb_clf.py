@@ -37,7 +37,7 @@ class my_xgb(object):
 		best_iter = []
 		y_pred_sum = np.zeros((X_test.shape[0], self.num_class))
 		if stage=='base':
-			meta_feat = np.zeros((n_train+X_test.shape[0], 3))
+			meta_feat = np.zeros((n_train+X_test.shape[0], self.num_class))
 		xg_test = xgb.DMatrix(X_test)
 		i = 0
 		for train, val in kf:
