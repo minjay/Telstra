@@ -21,7 +21,6 @@ class my_xgb(object):
 	def predict(self, X, y, X_test, stage):
 		np.random.seed(self.seed)
 		n_train = X.shape[0]
-		# shuffle has to be false
 		kf = KFold(n_train, n_folds=self.n_fold, shuffle=True)
 		param = {}
 		param['objective'] = self.obj
