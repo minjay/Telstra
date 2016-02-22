@@ -216,7 +216,7 @@ def feat_eng():
 	# drop id
 	df_all_no_id = df_all_cb.drop('id', axis=1, inplace=False)
 	X_all = df_all_no_id.values
-	return (X_all, y, num_class, n_train, n_feat)
+	return (X_all, y, num_class, n_train, n_feat, ids)
 
 if __name__=="__main__":
-	(X_all, y, num_class, n_train, n_feat) = feat_eng()
+	(X_all, y, num_class, n_train, n_feat, ids) = feat_eng()
