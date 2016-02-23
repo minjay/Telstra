@@ -5,7 +5,7 @@ from sklearn.cross_validation import KFold
 class my_xgb(object):
 	'''My xgboost classifier.'''
 	# init
-	def __init__(self, obj, eval_metric, num_class, nthread, silent, eta, colsample_bytree, subsample, max_depth, n_fold, seed):
+	def __init__(self, obj, eval_metric, num_class, nthread, silent, eta, colsample_bytree, subsample, max_depth, max_delta_step, gamma, n_fold, seed):
 		self.obj = obj
 		self.eval_metric = eval_metric
 		self.num_class = num_class
@@ -15,6 +15,8 @@ class my_xgb(object):
 		self.colsample_bytree = colsample_bytree
 		self.subsample = subsample
 		self.max_depth = max_depth
+		self.max_delta_step = max_delta_step
+		self.gamma = gamma
 		self.n_fold = n_fold
 		self.seed = seed
 	# predict
@@ -32,6 +34,8 @@ class my_xgb(object):
 		param['colsample_bytree'] = self.colsample_bytree
 		param['subsample'] = self.subsample
 		param['max_depth'] = self.max_depth
+		param['max_delta_step'] = self.max_delta_step
+		param['gamma'] = self.gamma
 		num_round = 10000
 		best_score = []
 		best_iter = []
