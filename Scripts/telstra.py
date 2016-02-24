@@ -33,7 +33,7 @@ X_categ_test = X_all[n_train:, n_feat:]
 
 my_xgb = xgb_clf.my_xgb(obj='multi:softprob', eval_metric='mlogloss', num_class=num_class, 
     nthread=2, silent=1, eta=0.02, colsample_bytree=0.6, subsample=0.9, max_depth=8, 
-    max_delta_step=1, gamma=0.1, n_fold=20, seed=0)
+    max_delta_step=1, gamma=0.1, n_fold=30, seed=0)
 y_pred_single = my_xgb.predict(X, y, X_test, 'single')
 
 clf1 = LogisticRegression(solver='lbfgs', max_iter=1000, multi_class='multinomial', verbose=1)
