@@ -29,16 +29,21 @@ def feat_eng():
 	df_sev_all = df_sev.merge(df_all, on='id')
 	loc = 'location 1'
 	time = []
+	time_norm =[]
+	st = 0
 	t = 0
 	for i in range(df_sev_all.shape[0]):
 		if df_sev_all['location'][i]==loc:
 			t += 1
 			time += [t]
 		else:
+			time_norm += [float(time[j])/t for j in range(st, i)]
+			st = i
 			loc = df_sev_all['location'][i]
 			t = 1
 			time += [t]
-	df_time = pd.DataFrame({'id': df_sev['id'], 'time': time})
+	time_norm += [float(time[j])/t for j in range(st, i+1)]
+	df_time = pd.DataFrame({'id': df_sev['id'], 'time': time, 'time_norm': time_norm})
 	## feature engineering
 	# feature related to location
 	loc_diff = np.setdiff1d(df_test['location'].values, df_train['location'].values)
