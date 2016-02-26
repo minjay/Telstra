@@ -208,6 +208,7 @@ def feat_eng():
 	df_all_cb = df_all_cb.join(df_eve_table, on='id')
 	df_all_cb = df_all_cb.join(df_log_table, on='id')
 	df_all_cb = df_all_cb.join(df_res_table, on='id')
+	n_feat2 = df_all_cb.shape[1]-1
 	df_all_cb = df_all_cb.join(df_sev_table, on='id')
 	n_feat = df_all_cb.shape[1]-1
 	df_all_cb = df_all_cb.join(df_loc_table, on='id')
@@ -216,7 +217,7 @@ def feat_eng():
 	# drop id
 	df_all_no_id = df_all_cb.drop('id', axis=1, inplace=False)
 	X_all = df_all_no_id.values
-	return (X_all, y, num_class, n_train, n_feat, ids)
+	return (X_all, y, num_class, n_train, n_feat, n_feat2, ids, df_all_cb['location'].values)
 
 if __name__=="__main__":
-	(X_all, y, num_class, n_train, n_feat, ids) = feat_eng()
+	(X_all, y, num_class, n_train, n_feat, n_feat2, ids, df_all_cb['location'].values) = feat_eng()
