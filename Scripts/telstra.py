@@ -36,16 +36,16 @@ X_categ_test = X_all[n_train:, n_feat:]
 
 # super bagging
 y_pred_sum = np.zeros((X_test.shape[0], num_class))
-set_colsample_bytree = [0.5, 0.6, 0.7]
-set_subsample = [0.8, 0.9, 1]
-set_max_depth = [7, 8, 9]
+set_colsample_bytree = [0.6]
+set_subsample = [0.9]
+set_max_depth = [8]
 for colsample_bytree in set_colsample_bytree:
 	for subsample in set_subsample:
 		for max_depth in set_max_depth:
 			seed += 1
 			print(seed)
 			my_xgb = xgb_clf.my_xgb(obj='multi:softprob', eval_metric='mlogloss', num_class=num_class, 
-    			nthread=20, silent=1, eta=0.02, colsample_bytree=colsample_bytree, subsample=subsample, 
+    			nthread=20, silent=1, eta=0.01, colsample_bytree=colsample_bytree, subsample=subsample, 
     			max_depth=max_depth, max_delta_step=1, gamma=0.1, alpha=0, param_lambda=1, n_fold=35, seed=seed)
 
 			clf1 = LogisticRegression(solver='lbfgs', max_iter=1000, multi_class='multinomial', verbose=1, n_jobs=20)
