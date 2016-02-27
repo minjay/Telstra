@@ -45,10 +45,10 @@ for colsample_bytree in set_colsample_bytree:
 			seed += 1
 			print(seed)
 			my_xgb = xgb_clf.my_xgb(obj='multi:softprob', eval_metric='mlogloss', num_class=num_class, 
-    			nthread=10, silent=1, eta=0.02, colsample_bytree=colsample_bytree, subsample=subsample, 
+    			nthread=20, silent=1, eta=0.02, colsample_bytree=colsample_bytree, subsample=subsample, 
     			max_depth=max_depth, max_delta_step=1, gamma=0.1, alpha=0, param_lambda=1, n_fold=35, seed=seed)
 
-			clf1 = LogisticRegression(solver='lbfgs', max_iter=1000, multi_class='multinomial', verbose=1, n_jobs=10)
+			clf1 = LogisticRegression(solver='lbfgs', max_iter=1000, multi_class='multinomial', verbose=1, n_jobs=20)
 			my_clf = gen_clf.my_clf(num_class=num_class, n_fold=35, seed=seed)
 			meta_feat1 = my_clf.predict(clf1, X_categ, y, X_categ_test, 'base') 
 			meta_feat1_1 = np.reshape(np.apply_along_axis(np.argmax, 1, meta_feat1), (-1, 1))
