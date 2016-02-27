@@ -34,21 +34,32 @@ X_test = X_all[n_train:, :]
 X_numeric_test = X_all[n_train:, :n_feat]
 X_categ_test = X_all[n_train:, n_feat:]
 
-my_xgb = xgb_clf.my_xgb(obj='multi:softprob', eval_metric='mlogloss', num_class=num_class, 
-    nthread=10, silent=1, eta=0.02, colsample_bytree=0.6, subsample=0.9, max_depth=8, 
-    max_delta_step=1, gamma=0.1, alpha=0, param_lambda=1, n_fold=35, seed=seed)
-#y_pred_single = my_xgb.predict(X, y, X_test, 'single')
+# super bagging
+y_pred_sum = np.zeros((X_test.shape[0], num_class))
+set_colsample_bytree = [0.05, 0.1, 0.25, 0.5, 0.6, 0.7, 1]
+set_subsample = [0.8, 0.9, 1]
+set_max_depth = [7, 8, 9]
+for colsample_bytree in set_colsample_bytree:
+	for subsample in set_subsample:
+		for max_depth in set_max_depth:
+			seed += 1
+			print(seed)
+			my_xgb = xgb_clf.my_xgb(obj='multi:softprob', eval_metric='mlogloss', num_class=num_class, 
+    			nthread=10, silent=1, eta=0.02, colsample_bytree=colsample_bytree, subsample=subsample, 
+    			max_depth=max_depth, max_delta_step=1, gamma=0.1, alpha=0, param_lambda=1, n_fold=35, seed=seed)
 
-clf1 = LogisticRegression(solver='lbfgs', max_iter=1000, multi_class='multinomial', verbose=1, n_jobs=10)
-my_clf = gen_clf.my_clf(num_class=num_class, n_fold=35, seed=seed)
-meta_feat1 = my_clf.predict(clf1, X_categ, y, X_categ_test, 'base') 
-meta_feat1_1 = np.reshape(np.apply_along_axis(np.argmax, 1, meta_feat1), (-1, 1))
+			clf1 = LogisticRegression(solver='lbfgs', max_iter=1000, multi_class='multinomial', verbose=1, n_jobs=10)
+			my_clf = gen_clf.my_clf(num_class=num_class, n_fold=35, seed=seed)
+			meta_feat1 = my_clf.predict(clf1, X_categ, y, X_categ_test, 'base') 
+			meta_feat1_1 = np.reshape(np.apply_along_axis(np.argmax, 1, meta_feat1), (-1, 1))
 
-X_meta = np.concatenate([X_numeric, meta_feat1_1[:n_train, :]], axis=1)
-X_meta_test = np.concatenate([X_numeric_test, meta_feat1_1[n_train:, :]], axis=1)
+			X_meta = np.concatenate([X_numeric, meta_feat1_1[:n_train, :]], axis=1)
+			X_meta_test = np.concatenate([X_numeric_test, meta_feat1_1[n_train:, :]], axis=1)
 
-y_pred = my_xgb.predict(X_meta, y, X_meta_test, 'meta')
+			y_pred = my_xgb.predict(X_meta, y, X_meta_test, 'meta')
+			y_pred_sum = y_pred_sum+y_pred
 
+y_pred = y_pred_sum/seed
 # save pred
 sub = pd.DataFrame(data={'id':ids, 'predict_0':y_pred[:, 0], 'predict_1':y_pred[:, 1],
 	'predict_2':y_pred[:, 2]}, columns=['id', 'predict_0', 'predict_1', 'predict_2'])
