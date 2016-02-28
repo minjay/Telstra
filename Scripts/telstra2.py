@@ -64,4 +64,4 @@ y_pred = y_pred_sum/seed
 sub = pd.DataFrame(data={'id':ids, 'predict_0':y_pred[:, 0], 'predict_1':y_pred[:, 1],
 	'predict_2':y_pred[:, 2]}, columns=['id', 'predict_0', 'predict_1', 'predict_2'])
 my_dir = os.getcwd()+'/Telstra/Subs/'
-sub.to_csv(my_dir+'sub.csv', index=False)
+sub.to_csv(my_dir+'sub2.csv', index=False)
