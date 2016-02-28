@@ -43,7 +43,7 @@ def feat_eng():
 			t = 1
 			time += [t]
 	time_norm += [float(time[j])/t for j in range(st, i+1)]
-	df_time = pd.DataFrame({'id': df_sev['id'], 'time': time, 'time_norm': time_norm})
+	df_time = pd.DataFrame({'id': df_sev['id'], 'time_norm': time_norm})
 	## feature engineering
 	# feature related to location
 	loc_diff = np.setdiff1d(df_test['location'].values, df_train['location'].values)
