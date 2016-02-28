@@ -36,7 +36,7 @@ X_categ_test = X_all[n_train:, n_feat:]
 
 # super bagging
 y_pred_sum = np.zeros((X_test.shape[0], num_class))
-set_colsample_bytree = [0.5 0.6]
+set_colsample_bytree = [0.5, 0.6]
 set_subsample = [0.9]
 set_max_depth = [8]
 for colsample_bytree in set_colsample_bytree:
