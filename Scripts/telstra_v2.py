@@ -17,7 +17,7 @@ import sys
 my_dir = os.getcwd()
 sys.path.append(my_dir+'/Telstra/Scripts')
 
-import get_raw_feat
+import get_raw_feat2
 import xgb_clf
 import gen_clf
 
