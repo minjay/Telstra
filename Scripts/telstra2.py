@@ -24,7 +24,7 @@ import gen_clf
 seed = 0
 
 print('Getting raw features...')
-(X_all, y, num_class, n_train, n_feat, n_feat2, ids, X_loc_all) = get_raw_feat.feat_eng()
+(X_all, y, num_class, n_train, n_feat, n_feat2, ids, X_loc_all) = get_raw_feat2.feat_eng()
 
 X = X_all[:n_train, :]
 X_numeric = X_all[:n_train, :n_feat]
