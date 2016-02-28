@@ -17,14 +17,14 @@ import sys
 my_dir = os.getcwd()
 sys.path.append(my_dir+'/Telstra/Scripts')
 
-import get_raw_feat
+import get_raw_feat2
 import xgb_clf
 import gen_clf
 
 seed = 0
 
 print('Getting raw features...')
-(X_all, y, num_class, n_train, n_feat, n_feat2, ids, X_loc_all) = get_raw_feat.feat_eng()
+(X_all, y, num_class, n_train, n_feat, n_feat2, ids, X_loc_all) = get_raw_feat2.feat_eng()
 
 X = X_all[:n_train, :]
 X_numeric = X_all[:n_train, :n_feat]
@@ -56,4 +56,4 @@ y_pred = y_pred_sum/seed
 sub = pd.DataFrame(data={'id':ids, 'predict_0':y_pred[:, 0], 'predict_1':y_pred[:, 1],
 	'predict_2':y_pred[:, 2]}, columns=['id', 'predict_0', 'predict_1', 'predict_2'])
 my_dir = os.getcwd()+'/Telstra/Subs/'
-sub.to_csv(my_dir+'sub4.csv', index=False)
+sub.to_csv(my_dir+'sub5.csv', index=False)
