@@ -13,6 +13,7 @@ There are other features I have tried, and they are all written in get_raw_feat.
 
 ### Classifier
 I used Xgboost, which seems to work better than the other classifiers I have tried. The best single model using 10-fold cross-validation averaging gives scores: 0.41599 (Public LB) and 0.41136 (Private LB). 
+
 ``my_xgb = xgb_clf.my_xgb(obj='multi:softprob', eval_metric='mlogloss', num_class=num_class, 
-    			nthread=20, silent=1, eta=0.01, colsample_bytree=colsample_bytree, subsample=subsample, 
-    			max_depth=max_depth, max_delta_step=1, gamma=0.1, alpha=0, param_lambda=1, n_fold=35, seed=seed)``
+    			nthread=20, silent=1, eta=0.02, colsample_bytree=0.6, subsample=0.9, 
+    			max_depth=8, max_delta_step=1, gamma=0.1, alpha=0, param_lambda=1, n_fold=10, seed=0)``
