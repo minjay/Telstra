@@ -11,4 +11,5 @@ As always, feature engineering is the first and the most important step in parti
 
 There are other features I have tried, and they are all written in get_raw_feat.py. Basically, they are one-hot-encoding, using various summary statistics to reduce one-to-many relationship to one-to-one, and two-way or three-way interaction among multiple variables. I didn't include the one-hot-encoding of location directly as a feature given the number of unique locations is very large. Tree-based classifiers such as Random Forests and Gradient Tree Boosting are not good at handling this huge sparse feature matrix. I encoded this sparse feature matrix by stacking. Specifically, I used Logistic regression to fit the data with this sparse matrix as predictors. The (class) predictions based on the fitted Logistic regression model are used as meta features.
 
-
+### Classifier
+I used Xgboost.
