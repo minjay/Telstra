@@ -17,14 +17,14 @@ import sys
 my_dir = os.getcwd()
 sys.path.append(my_dir+'/Telstra/Scripts')
 
-import get_raw_feat2
+import get_raw_feat3
 import xgb_clf
 import gen_clf
 
 seed = 0
 
 print('Getting raw features...')
-(X_all, y, num_class, n_train, n_feat, n_feat2, ids, X_loc_all) = get_raw_feat2.feat_eng()
+(X_all, y, num_class, n_train, n_feat, n_feat2, ids, X_loc_all) = get_raw_feat3.feat_eng()
 
 X = X_all[:n_train, :]
 X_numeric = X_all[:n_train, :n_feat]
@@ -36,7 +36,7 @@ X_categ_test = X_all[n_train:, n_feat:]
 
 # super bagging
 y_pred_sum = np.zeros((X_test.shape[0], num_class))
-set_colsample_bytree = [0.3, 0.4]
+set_colsample_bytree = [0.5, 0.6]
 set_subsample = [0.9]
 set_max_depth = [8]
 for colsample_bytree in set_colsample_bytree:
@@ -53,8 +53,8 @@ for colsample_bytree in set_colsample_bytree:
 			meta_feat1 = my_clf.predict(clf1, X_categ, y, X_categ_test, 'base') 
 			meta_feat1_1 = np.reshape(np.apply_along_axis(np.argmax, 1, meta_feat1), (-1, 1))
 
-			X_meta = np.concatenate([X, meta_feat1_1[:n_train, :]], axis=1)
-			X_meta_test = np.concatenate([X_test, meta_feat1_1[n_train:, :]], axis=1)
+			X_meta = np.concatenate([X_numeric, meta_feat1_1[:n_train, :]], axis=1)
+			X_meta_test = np.concatenate([X_numeric_test, meta_feat1_1[n_train:, :]], axis=1)
 
 			y_pred = my_xgb.predict(X_meta, y, X_meta_test, 'meta')
 			y_pred_sum = y_pred_sum+y_pred
