@@ -17,3 +17,7 @@ I used Xgboost, which seems to work better than the other classifiers I have tri
 ``my_xgb = xgb_clf.my_xgb(obj='multi:softprob', eval_metric='mlogloss', num_class=num_class, 
     			nthread=20, silent=1, eta=0.02, colsample_bytree=0.6, subsample=0.9, 
     			max_depth=8, max_delta_step=1, gamma=0.1, alpha=0, param_lambda=1, n_fold=10, seed=0)``
+### Ensembling
+I am not experienced in ensembling. So what I did is just averaging Xgboost's with `colsample_bytree=0.5, 0.6` and feature sets including `time` or `time_norm` or both of them.
+This final model gives scores: 0.41038 (Public LB) and 0.40742 (Private LB).
+But unfortunately I didn't choose it as my final submissions since its public score is worse than the other model.
